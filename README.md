@@ -12,6 +12,11 @@ CloudS2Mask is an open-source Python library that efficiently segments clouds an
 
 🚀 Installation  
 To install CloudS2Mask, clone this repository and proceed with manual installation.
+```console
+git clone https://github.com/DPIRD-DMA/CloudS2Mask
+cd CloudS2Mask
+pip install -q .
+```
 
 💻 Usage  
 Here's a simple demonstration of how to use CloudS2Mask:

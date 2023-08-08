@@ -1,5 +1,6 @@
-# mostly taken from
+# original code from
 # https://github.com/12rambau/rio-vrt/blob/main/rio_vrt/vrt.py
+
 import xml.etree.cElementTree as ET
 from pathlib import Path
 from typing import List, Tuple
@@ -159,7 +160,7 @@ def build_vrt(
     )
     ET.SubElement(VRTDataset, "OverviewList", {"resampling": "nearest"}).text = "2 4 8"
 
-    for i, file in enumerate(files):
+    for i, file in enumerate(files, start=1):
         attr = {"dataType": "UInt16", "band": str(i)}
         VRTRasterBands = ET.SubElement(VRTDataset, "VRTRasterBand", attr)
         ET.SubElement(VRTRasterBands, "NoDataValue").text = "0"
