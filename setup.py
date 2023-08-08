@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="CloudS2Mask",
-    version="0.1.0",  # Update this for new versions
+    version="0.1.1",
     description="Python library for cloud and cloud shadow segmentation in Sentinel-2 L1C imagery",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -11,7 +11,7 @@ setup(
     url="https://github.com/DPIRD-DMA/CloudS2Mask",
     python_requires=">=3.7",
     packages=find_packages(),
-    install_requires=["fastai", "timm", "tqdm", "rasterio"],
+    install_requires=["fastai>=2.7", "timm>=0.9", "tqdm>=4.0", "rasterio>=1.3"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

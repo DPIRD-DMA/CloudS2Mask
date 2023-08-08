@@ -86,13 +86,6 @@ scene_settings = create_settings(
     pytorch_device='MPS',
 )
 ```
-## 📚 Requirements  
-The following packages are required:
-
-* fastai >= 2.7 
-* timm
-* tqdm
-* rasterio >= 1.3
 
 ## 👏 Contributing  
 We welcome all contributions! Feel free to open an issue or submit a pull request.
