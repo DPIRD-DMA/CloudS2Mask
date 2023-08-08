@@ -1,16 +1,16 @@
-☁️ CloudS2Mask
+# Welcome to CloudS2Mask ☁️
 
 ![GitHub](https://img.shields.io/badge/License-MIT-green)
 
-💡 About  
+## 💡 About  
 CloudS2Mask is an open-source Python library that efficiently segments clouds and cloud shadows in Sentinel-2 imagery using state-of-the-art deep learning techniques. Benchmarks with the CloudSEN12 Dataset show a 17% error reduction compared to the most competent existing methods.
 
-🎯 Features  
+## 🎯 Features  
 * High-precision cloud and cloud shadow segmentation for Sentinel-2 L1C imagery.
 * Rapid processing: Approximately 2.2 seconds per scene at 20m resolution.
 * Compatibility with both GPU and non-GPU systems.
 
-🚀 Installation  
+## 🚀 Installation  
 To install CloudS2Mask, clone this repository and proceed with manual installation.
 ```console
 git clone https://github.com/DPIRD-DMA/CloudS2Mask
@@ -18,10 +18,10 @@ cd CloudS2Mask
 pip install -q .
 ```
 
-💻 Usage  
+## 💻 Usage  
 Here's a simple demonstration of how to use CloudS2Mask:
 
-[Colab Example](https://colab.research.google.com/drive/1_bF57noGoP7DFKWe-6V23pqZ2iI1Ah0b?usp=sharing)
+[Colab Example](https://colab.research.google.com/drive/1waADTsAFfQojAQcKS4oraptkkL9L2Oyh?usp=sharing)
 
 
 ```python
@@ -44,7 +44,8 @@ scene_settings = create_settings(
 
 paths_to_masks = batch_process_scenes(scene_settings)
 ```
-CloudsS2Mask offers a range of performance and accuracy parameters, here are some examples of use,
+## ⚙️ Performance Tuning
+CloudsS2Mask offers a range of performance and accuracy options, here are some examples,
 
 Settings for high accuracy GPU inference:
 
@@ -85,7 +86,7 @@ scene_settings = create_settings(
     pytorch_device='MPS',
 )
 ```
-📚 Requirements  
+## 📚 Requirements  
 The following packages are required:
 
 * fastai >= 2.7 
@@ -93,11 +94,11 @@ The following packages are required:
 * tqdm
 * rasterio >= 1.3
 
-👏 Contributing  
+## 👏 Contributing  
 We welcome all contributions! Feel free to open an issue or submit a pull request.
 
-📄 License  
+## 📄 License  
 This project is licensed under the MIT License - please refer to the LICENSE file for more details.
 
-📝 Contact  
+## 📝 Contact  
 For support, bug reporting, or to contribute, feel free to reach out at nicholas.wright@dpird.wa.gov.au.
