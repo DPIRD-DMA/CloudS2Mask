@@ -7,7 +7,7 @@ CloudS2Mask is an open-source Python library that efficiently segments clouds an
 
 ## 🎯 Features  
 * High-precision cloud and cloud shadow segmentation for Sentinel-2 L1C imagery.
-* Rapid processing: Approximately 2.2 seconds per scene at 20m resolution.
+* Rapid processing: Approximately 2.2 seconds per scene at 20m resolution (RTX 4090, AMD Ryzen 9 5950X).
 * Compatibility with both GPU and non-GPU systems.
 
 ## 🚀 Installation  
@@ -21,7 +21,8 @@ pip install -q .
 ## 💻 Usage  
 Here's a simple demonstration of how to use CloudS2Mask:
 
-[Colab Example](https://colab.research.google.com/drive/10zyZWCPaGDUO6PKNsyKyxcXIfvkoP2xK?usp=sharing)
+[<button style="background-color: #f0ad4e; color: white; padding: 10px 20px; border-radius: 5px; border: none; font-weight: bold;">Colab Example</button>](https://colab.research.google.com/drive/10zyZWCPaGDUO6PKNsyKyxcXIfvkoP2xK?usp=sharing)
+
 
 
 ```python
@@ -78,7 +79,7 @@ scene_settings = create_settings(
     processing_res=20,
 )
 ```
-CloudS2Mask will try to auto detect acceleration cards such as NVIDIA GPUs or Apple MPS, but you can also manually specify them like this
+CloudS2Mask will try to auto detect acceleration cards such as NVIDIA GPUs or Apple MPS, but you can also manually specify them like this:
 ```python
 scene_settings = create_settings(
     sent_safe_dirs=l1c_folders,
