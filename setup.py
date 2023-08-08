@@ -19,4 +19,5 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
+    package_data={"clouds2mask": ["model_download_links.csv"]},
 )

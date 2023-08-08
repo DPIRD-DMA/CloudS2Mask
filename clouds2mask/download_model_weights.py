@@ -102,10 +102,12 @@ def download_model_weights() -> None:
     df = get_model_download_links()
 
     for _, row in df.iterrows():
-        file_id = row["google_drive_id"]
-        destination = Path(__file__).resolve().parent / f'models/{row["file_name"]}'
+        file_id = str(row["google_drive_id"])
+        model_dir = Path(__file__).resolve().parent / "models"
+        destination = model_dir / str(row["file_name"])
 
         # Only download the file if it doesn't exist already
         if not destination.exists():
+            model_dir.mkdir(exist_ok=True)
             print(f"Downloading {row['file_name']} to {destination}...")
             download_file_from_google_drive(file_id, destination)
