@@ -21,7 +21,7 @@ pip install -q .
 ## 💻 Usage  
 Here's a simple demonstration of how to use CloudS2Mask:
 
-[Colab Example](https://colab.research.google.com/drive/1_bF57noGoP7DFKWe-6V23pqZ2iI1Ah0b?usp=sharing)
+[Colab Example](https://colab.research.google.com/drive/10zyZWCPaGDUO6PKNsyKyxcXIfvkoP2xK?usp=sharing)
 
 
 ```python
