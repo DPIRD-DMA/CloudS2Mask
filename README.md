@@ -21,8 +21,11 @@ pip install -q .
 ## 💻 Usage  
 Here's a simple demonstration of how to use CloudS2Mask:
 
-[<button style="background-color: #f0ad4e; color: white; padding: 10px 20px; border-radius: 5px; border: none; font-weight: bold;">Colab Example</button>](https://colab.research.google.com/drive/10zyZWCPaGDUO6PKNsyKyxcXIfvkoP2xK?usp=sharing)
+[![Colab_Button]][Link]
 
+[Link]: https://colab.research.google.com/drive/10zyZWCPaGDUO6PKNsyKyxcXIfvkoP2xK?usp=sharing 'Try CloudS2Mask In Colab'
+
+[Colab_Button]: https://img.shields.io/badge/Try%20in%20Colab-grey?style=for-the-badge&logo=google-colab
 
 
 ```python
