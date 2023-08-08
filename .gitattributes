@@ -1,0 +1,1 @@
+clouds2mask/models/*.pkl filter=lfs diff=lfs merge=lfs -text
