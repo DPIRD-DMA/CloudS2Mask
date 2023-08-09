@@ -22,6 +22,8 @@ cd ..
 ## 💻 Usage  
 Here's a simple demonstration of how to use CloudS2Mask:
 
+All you need to do is pass a list of Sentinel-2 level 1C 'SAFE' directories to CloudS2Mask. 
+
 [![Colab_Button]][Link]
 
 [Link]: https://colab.research.google.com/drive/10zyZWCPaGDUO6PKNsyKyxcXIfvkoP2xK?usp=sharing 'Try CloudS2Mask In Colab'
@@ -52,19 +54,20 @@ paths_to_masks = batch_process_scenes(scene_settings)
 ## ⚙️ Performance Tuning
 CloudsS2Mask offers a range of performance and accuracy options, here are some examples,
 
-Settings for high accuracy GPU inference:
+Settings for high accuracy inference:
 
 ```python
 scene_settings = create_settings(
     sent_safe_dirs=l1c_folders,
     output_dir=output_dir,
     batch_size=32,
-    tta_max_depth=7,
+    tta_max_depth=5,
     processing_res=10,
+    patch_overlap_px=64,
     model_ensembling=True,
 )
 ```
-Settings for fast GPU inference:
+Settings for fast inference:
 ```python
 scene_settings = create_settings(
     sent_safe_dirs=l1c_folders,
@@ -79,7 +82,7 @@ Settings for CPU inference:
 scene_settings = create_settings(
     sent_safe_dirs=l1c_folders,
     output_dir=output_dir,
-    batch_size=2,
+    batch_size=1,
     processing_res=20,
 )
 ```
