@@ -16,6 +16,7 @@ To install CloudS2Mask, clone this repository and proceed with manual installati
 git clone https://github.com/DPIRD-DMA/CloudS2Mask
 cd CloudS2Mask
 pip install -q .
+cd ..
 ```
 
 ## 💻 Usage  

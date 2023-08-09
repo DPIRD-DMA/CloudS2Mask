@@ -61,6 +61,7 @@ def undo_augmentation(
     return predictions
 
 
+@torch.jit.script  # type: ignore
 def normalize_batch(
     x: torch.Tensor, mean: torch.Tensor, std: torch.Tensor
 ) -> torch.Tensor:
@@ -216,7 +217,7 @@ def get_preds(
             for model in scene_settings.models:
                 preds = model(patch_tensors_norm_aug[active_indices])
                 # convert to probabilities
-                # preds = torch.nn.functional.softmax(preds, dim=1)
+                preds = torch.nn.functional.softmax(preds, dim=1)
 
                 preds = undo_augmentation(augs, preds)
 
@@ -231,7 +232,7 @@ def get_preds(
                     break
 
         active_indices = update_active_indices(preds_mean, active_indices)
-    preds_mean = torch.nn.functional.softmax(preds_mean, dim=1)
+    # preds_mean = torch.nn.functional.softmax(preds_mean, dim=1)
     preds_mean = torch.mul(preds_mean, 255)
 
     preds_np = preds_mean.cpu().numpy().astype("uint8")

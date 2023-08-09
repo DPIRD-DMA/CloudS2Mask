@@ -1,11 +1,12 @@
+import shutil
+import tempfile
+from pathlib import Path
+from typing import Union
+
+import pandas as pd
 import requests
 from requests import Response
 from tqdm.auto import tqdm
-from pathlib import Path
-from typing import Union
-import pandas as pd
-import shutil
-import tempfile
 
 
 def download_file_from_google_drive(file_id: str, destination: Path) -> None:
@@ -108,6 +109,12 @@ def download_model_weights() -> None:
 
         # Only download the file if it doesn't exist already
         if not destination.exists():
+            model_dir.mkdir(exist_ok=True)
+            print(f"Downloading {row['file_name']} to {destination}...")
+            download_file_from_google_drive(file_id, destination)
+
+        # If it exists, check if its size is less than or equal to 1 MB
+        elif destination.stat().st_size <= 1024 * 1024:
             model_dir.mkdir(exist_ok=True)
             print(f"Downloading {row['file_name']} to {destination}...")
             download_file_from_google_drive(file_id, destination)
