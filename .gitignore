@@ -1,3 +1,4 @@
 outputs/*
 clouds2mask/__pycache__/*
 clouds2mask/.ipynb_checkpoints/*
+*.DS_Store

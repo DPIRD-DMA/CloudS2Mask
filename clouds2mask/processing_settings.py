@@ -111,7 +111,7 @@ def get_b10_size(sent_safe_dir: Path) -> float:
 
 def create_settings(
     output_dir: Path,
-    sent_safe_dirs: List[Path],
+    sent_safe_dirs: Union[List[Path], List[str]],
     output_compression: Union[str, None] = "LZW",
     batch_size: int = 10,
     pytorch_device: Union[torch.device, str] = default_device(),
@@ -151,7 +151,7 @@ def create_settings(
     ----------
     output_dir : Path
         The directory where outputs will be saved.
-    sent_safe_dirs : List[Path]
+    sent_safe_dirs : List[Path], List[str]
         List of directories of the .SAFE files.
     output_compression : str, optional
         The type of output compression (if any).
@@ -254,7 +254,8 @@ def create_settings(
 
     scene_settings_list = []
     for sent_safe_dir in sent_safe_dirs:
-        # is no path is given use the default model path
+        # convert to path if string
+        sent_safe_dir = Path(sent_safe_dir)
 
         # the name of the .SAFE folder
         scene_name = sent_safe_dir.name
@@ -372,6 +373,9 @@ def create_inf_only_settings(
     Inf_Only_Settings
         The inference-only settings object.
     """
+    if tta_max_depth < 0 or tta_max_depth > 7:
+        raise Exception("tta_max_depth must be between 0 and 7")
+
     download_model_weights()
     scene_progress_pbar = tqdm(
         total=33,
