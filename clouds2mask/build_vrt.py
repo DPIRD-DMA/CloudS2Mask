@@ -70,18 +70,26 @@ def _extract_file_information(files: List[Path]):
         tuple: A tuple containing lists of the left, bottom, right, and top
         bounds, as well as the x and y resolution for each file.
     """
-    left_, bottom_, right_, top_, xres_, yres_ = [], [], [], [], [], []
+    (
+        left_,
+        bottom_,
+        right_,
+        top_,
+    ) = (
+        [],
+        [],
+        [],
+        [],
+    )
 
     for file in files:
         with rio.open(file) as f:
-            xres_.append(f.res[0])
-            yres_.append(f.res[0])
             left_.append(f.bounds.left)
             right_.append(f.bounds.right)
             top_.append(f.bounds.top)
             bottom_.append(f.bounds.bottom)
 
-    return left_, bottom_, right_, top_, xres_, yres_
+    return left_, bottom_, right_, top_
 
 
 def _calculate_spatial_extend(
@@ -142,7 +150,7 @@ def build_vrt(
                     f'The CRS ({f.crs}) from file "{file}" doesn\'t match the global one ({crs})'
                 )
 
-    left_, bottom_, right_, top_, xres_, yres_ = _extract_file_information(files)
+    left_, bottom_, right_, top_ = _extract_file_information(files)
     transform, total_width, total_height = _calculate_spatial_extend(
         left_,
         bottom_,
@@ -167,7 +175,7 @@ def build_vrt(
 
         ComplexSource = ET.SubElement(VRTRasterBands, "ComplexSource")
 
-        ET.SubElement(ComplexSource, "SourceFilename", attr).text = str(file)
+        ET.SubElement(ComplexSource, "SourceFilename", attr).text = str(file.absolute())
 
         ET.SubElement(ComplexSource, "SourceBand").text = "1"
 

@@ -1,6 +1,8 @@
 # Welcome to CloudS2Mask ☁️
 
 ![GitHub](https://img.shields.io/badge/License-MIT-green)
+![Version](https://img.shields.io/badge/version-0.1.3-blue)
+![Last Commit](https://img.shields.io/github/last-commit/DPIRD-DMA/CloudS2Mask)
 
 ## 💡 About  
 CloudS2Mask is an open-source Python library that efficiently segments clouds and cloud shadows in Sentinel-2 imagery using state-of-the-art deep learning techniques. Benchmarks with the CloudSEN12 Dataset show a 17% error reduction compared to the most competent existing methods.
@@ -9,8 +11,12 @@ CloudS2Mask is an open-source Python library that efficiently segments clouds an
 * High-precision cloud and cloud shadow segmentation for Sentinel-2 L1C imagery.
 * Rapid processing: Approximately 2.2 seconds per scene at 20m resolution (RTX 4090, AMD Ryzen 9 5950X).
 * Compatibility with both GPU and non-GPU systems.
+* Supported on Linux, Windows, and macOS.
 
 ## 🚀 Installation  
+**Windows Users with NVIDIA GPUs**: Before installing CloudS2Mask, ensure you've installed [PyTorch with CUDA support](https://pytorch.org/get-started/locally/), then follow the steps below.
+
+**Mac and Linux Users**: You can proceed with the installation commands below.
 To install CloudS2Mask, clone this repository and proceed with manual installation.
 ```console
 git clone https://github.com/DPIRD-DMA/CloudS2Mask

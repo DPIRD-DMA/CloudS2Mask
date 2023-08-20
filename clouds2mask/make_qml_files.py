@@ -61,8 +61,7 @@ def create_cloud_mask_classification_qml(cloud_mask_path: Path) -> None:
     qml_content = """
     <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'> <qgis
     maxScale="0" hasScaleBasedVisibilityFlag="0"
-    styleCategories="AllStyleCategories" minScale="1e+08"
-    version="3.22.4-Białowieża">
+    styleCategories="AllStyleCategories" minScale="1e+08">
         <pipe>
             <rasterrenderer nodataColor="" type="paletted" opacity="0.5"
             band="1">
