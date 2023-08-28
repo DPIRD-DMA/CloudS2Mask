@@ -106,7 +106,8 @@ def consumer_batches_with_inf(
         increment value.
     """
     for patch_meta in meta_batches:
-        patch_tensor_batch = queue.get()  # this will block until an item is available
+        # this will block until an item is available
+        patch_tensor_batch = queue.get()
 
         preds_np = get_preds(patch_tensor_batch, scene_settings)
 
@@ -192,10 +193,9 @@ def get_preds(
     active_indices = list(range((patch_tensor_batch.shape[0])))
     preds_mean = torch.zeros(
         [
-            patch_tensor_batch.shape[1],
             4,
-            patch_tensor_batch.shape[2],
-            patch_tensor_batch.shape[3],
+            patch_tensor_batch.shape[-2],
+            patch_tensor_batch.shape[-1],
         ]
     )
 
@@ -263,7 +263,6 @@ def run_inference(
     arrays_batches, meta_batches = make_batches(
         patch_arrays, patch_metadata, scene_settings
     )
-
     pbar_inc = 33 / len(arrays_batches)
 
     scene_settings.scene_progress_pbar.desc = (
@@ -288,6 +287,5 @@ def run_inference(
             scene_settings,
             pbar_inc,
         )
-
     scene_settings.scene_progress_pbar.update(pbar_inc)
     return preds_with_meta

@@ -79,7 +79,14 @@ def merge_overlapped_preds(
     vrt_meta = vrt_src.meta
     output_height = vrt_meta["height"]
     output_width = vrt_meta["width"]
-    class_count = preds_with_meta[0]["patch_pred"].shape[0]
+    try:
+        class_count = preds_with_meta[0]["patch_pred"].shape[0]
+    except IndexError:
+        raise ValueError(
+            """Error: preds_with_meta list is empty, this normally means you have run
+                    out of GPU memory, try lowering the batch size."""
+        )
+
     merged_array = np.zeros([class_count, output_width, output_height], dtype="uint16")
     grad_tracker = np.zeros([output_width, output_height], dtype="float32")
 

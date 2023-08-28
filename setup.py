@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="CloudS2Mask",
-    version="0.1.3",
+    version="0.1.4",
     description="Python library for cloud and cloud shadow segmentation in Sentinel-2 L1C imagery",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",

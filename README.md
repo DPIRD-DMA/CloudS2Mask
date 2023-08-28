@@ -1,7 +1,7 @@
 # Welcome to CloudS2Mask ☁️
 
 ![GitHub](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/version-0.1.3-blue)
+![Version](https://img.shields.io/badge/version-0.1.4-blue)
 ![Last Commit](https://img.shields.io/github/last-commit/DPIRD-DMA/CloudS2Mask)
 
 ## 💡 About  
