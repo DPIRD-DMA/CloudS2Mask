@@ -1,7 +1,7 @@
 # Welcome to CloudS2Mask ☁️
 
 ![GitHub](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/version-0.1.5-blue)
+![Version](https://img.shields.io/badge/version-0.1.7-blue)
 ![Last Commit](https://img.shields.io/github/last-commit/DPIRD-DMA/CloudS2Mask)
 
 ## 💡 About  
@@ -17,7 +17,12 @@ CloudS2Mask is an open-source Python library that efficiently segments clouds an
 **Windows Users with NVIDIA GPUs**: Before installing CloudS2Mask, ensure you've installed [PyTorch with CUDA support](https://pytorch.org/get-started/locally/), then follow the steps below.
 
 **Mac and Linux Users**: You can proceed with the installation commands below.
-To install CloudS2Mask, clone this repository and proceed with manual installation.
+
+To install using pip.
+```console
+pip install clouds2mask
+```
+Or manually.
 ```console
 git clone https://github.com/DPIRD-DMA/CloudS2Mask
 cd CloudS2Mask
