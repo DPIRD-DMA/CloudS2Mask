@@ -238,7 +238,7 @@ def create_settings(
     output_folder_name = f"CloudS2Mask {processing_res}m"
     if model_ensembling:
         output_folder_name += " model ensembling"
-    # if we are using adative test time augmentation add it to the output folder name
+    # if we are using adaptive test time augmentation add it to the output folder name
     if tta_max_depth > 0:
         output_folder_name += f" ATTA {tta_max_depth}"
 

@@ -193,6 +193,7 @@ def get_preds(
     active_indices = list(range((patch_tensor_batch.shape[0])))
     preds_mean = torch.zeros(
         [
+            scene_settings.batch_size,
             4,
             patch_tensor_batch.shape[-2],
             patch_tensor_batch.shape[-1],

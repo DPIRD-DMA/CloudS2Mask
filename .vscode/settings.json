@@ -1,0 +1,24 @@
+{
+    "cSpell.words": [
+        "argmax",
+        "astype",
+        "ATTA",
+        "augs",
+        "Colab",
+        "CUDA",
+        "DPIRD",
+        "dtype",
+        "ensembling",
+        "ndarray",
+        "neighbour",
+        "neighbours",
+        "optimise",
+        "optimises",
+        "pbar",
+        "preds",
+        "rasterio",
+        "Ryzen",
+        "tqdm",
+        "Unet"
+    ]
+}
