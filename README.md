@@ -1,11 +1,11 @@
 # Welcome to CloudS2Mask ☁️
 
 ![GitHub](https://img.shields.io/badge/License-MIT-green)
-![Version](https://img.shields.io/badge/version-0.1.7-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Last Commit](https://img.shields.io/github/last-commit/DPIRD-DMA/CloudS2Mask)
 
 ## 💡 About  
-CloudS2Mask is an open-source Python library that efficiently segments clouds and cloud shadows in Sentinel-2 imagery using state-of-the-art deep learning techniques. Benchmarks with the CloudSEN12 Dataset show a 17% error reduction compared to the most competent existing methods.
+CloudS2Mask is an open-source Python library that efficiently segments clouds and cloud shadows in Sentinel-2 imagery using state-of-the-art deep learning techniques.
 
 ## 🎯 Features  
 * High-precision cloud and cloud shadow segmentation for Sentinel-2 L1C imagery.
@@ -72,9 +72,8 @@ scene_settings = create_settings(
     sent_safe_dirs=l1c_folders,
     output_dir=output_dir,
     batch_size=32,
-    tta_max_depth=5,
+    tta_max_depth=2,
     processing_res=10,
-    patch_overlap_px=64,
     model_ensembling=True,
 )
 ```

@@ -5,6 +5,8 @@ import torch
 from fastai.vision.models.unet import DynamicUnet
 from torch import device as Device
 
+from .model_settings import Settings
+
 
 def load_models(
     model_paths: List[Path], pytorch_device: torch.device
@@ -22,23 +24,41 @@ def load_models(
 
     models = []
     for model_path in model_paths:
-        # load the model
         model = torch.load(model_path, map_location=pytorch_device)
-
-        # model = model.to(memory_format=torch.channels_last)
-
         model.eval()
-
         models.append(model)
     return models
 
 
-def fp16_available(pytorch_device: torch.device, models: List[DynamicUnet]) -> bool:
+def warmup_models(settings: Settings) -> None:
+    """
+    Warm up the models by passing a tensor through them.
+
+    Args:
+        settings (Settings): The settings object.
+    """
+    dummy_input = torch.zeros(
+        (1, 13, settings.patch_size, settings.patch_size),
+        device=settings.pytorch_device,
+        dtype=torch.float16 if settings.fp16_mode else torch.float32,
+    )
+
+    for model in settings.models:
+        model(dummy_input)
+
+
+def fp16_available(
+    pytorch_device: torch.device,
+    models: List[DynamicUnet],
+    patch_size: int = 500,
+) -> bool:
     """
     Check if the given device supports FP16 (half-precision) computations.
 
     Args:
         device (torch.device): The device to check.
+        models (List[DynamicUnet]): A list of models.
+        patch_size (int, optional): The patch size to use for the test. Defaults to 500.
 
     Returns:
         bool: True if the device supports FP16 computations, False otherwise.
@@ -47,7 +67,9 @@ def fp16_available(pytorch_device: torch.device, models: List[DynamicUnet]) -> b
     try:
         # try passing a half precision tensor through the model
         model = models[0].half()
-        model(torch.zeros((1, 13, 1, 1), device=pytorch_device).half())
+        model(
+            torch.zeros((1, 13, patch_size, patch_size), device=pytorch_device).half()
+        )
         return True
     except RuntimeError as e:
         print(f"FP16 NOT supported on {pytorch_device}, using FP32.")

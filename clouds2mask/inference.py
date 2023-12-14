@@ -1,6 +1,5 @@
 import concurrent.futures
 import queue
-import warnings
 from typing import List, Tuple, Union
 
 import numpy as np
@@ -44,8 +43,8 @@ def undo_augmentation(
     Reverses the applied image augmentations.
 
     Args:
-        augmentations (Tuple): A tuple indicating the types of augmentations to reverse.
-        predictions (torch.Tensor): The augmented image tensors.
+        augmentations (Tuple): A tuple indicating the types of augmentations to
+        reverse. predictions (torch.Tensor): The augmented image tensors.
 
     Returns:
         torch.Tensor: The image tensors after reversing the augmentations.
@@ -84,6 +83,7 @@ def create_and_queue_batches(
     """
     for patch_array_batch in arrays_batches:
         patch_tensor_batch = patch_list_to_tensor(patch_array_batch, scene_settings)
+
         batch_queue.put(patch_tensor_batch)
 
 
@@ -145,6 +145,7 @@ def make_batches(
         patch_metadata[i : i + scene_settings.batch_size]
         for i in range(0, len(patch_metadata), scene_settings.batch_size)
     ]
+
     return patch_arrays_sublists, patch_meta_sublists
 
 
@@ -155,21 +156,17 @@ def patch_list_to_tensor(
     Converts a list of patch arrays to a tensor batch.
 
     Args:
-        patch_arrays (List[np.ndarray]): List of patch arrays.
-        scene_settings (Union[Settings, Inf_Only_Settings]): The settings for the scene.
+        patch_arrays (List[np.ndarray]): List of patch arrays. scene_settings
+        (Union[Settings, Inf_Only_Settings]): The settings for the scene.
 
     Returns:
         torch.Tensor: The tensor of patch arrays.
     """
-    # if the input is not float32, convert it
-    if patch_arrays[0].dtype != np.float32:
-        warnings.warn("Input is not float32, converting to float32")
-        patch_arrays = [patch.astype(np.float32) for patch in patch_arrays]
-
     # convert the patch arrays to tensors, and move them to the correct device
     tensor_type = torch.float16 if scene_settings.fp16_mode else torch.float32
-    patch_batch = torch.tensor(
-        np.array(patch_arrays), device=scene_settings.pytorch_device, dtype=tensor_type
+
+    patch_batch = torch.from_numpy(np.stack(patch_arrays).astype(np.float32)).to(
+        device=scene_settings.pytorch_device, dtype=tensor_type
     )
 
     return patch_batch
@@ -233,7 +230,7 @@ def get_preds(
                     break
 
         active_indices = update_active_indices(preds_mean, active_indices)
-    # preds_mean = torch.nn.functional.softmax(preds_mean, dim=1)
+
     preds_mean = torch.mul(preds_mean, 255)
 
     preds_np = preds_mean.cpu().numpy().astype("uint8")
@@ -260,10 +257,12 @@ def run_inference(
         list: List of dictionaries, each containing the prediction and
         corresponding metadata for an image patch.
     """
+
     # convert arrays and metadata to batches
     arrays_batches, meta_batches = make_batches(
         patch_arrays, patch_metadata, scene_settings
     )
+
     pbar_inc = 33 / len(arrays_batches)
 
     scene_settings.scene_progress_pbar.desc = (
@@ -289,4 +288,5 @@ def run_inference(
             pbar_inc,
         )
     scene_settings.scene_progress_pbar.update(pbar_inc)
+
     return preds_with_meta

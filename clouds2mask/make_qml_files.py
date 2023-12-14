@@ -74,8 +74,8 @@ def create_cloud_mask_classification_qml(cloud_mask_path: Path) -> None:
                 </minMaxOrigin> <colorPalette>
                     <paletteEntry alpha="0" color="#cfd940" label="Clear"
                     value="0"/> <paletteEntry alpha="255" color="#03fcf8"
-                    label="Heavy Cloud" value="1"/> <paletteEntry alpha="255"
-                    color="#ff5ffb" label="Light Cloud" value="2"/>
+                    label="Thick Cloud" value="1"/> <paletteEntry alpha="255"
+                    color="#ff5ffb" label="Thin Cloud" value="2"/>
                     <paletteEntry alpha="255" color="#f2ff00" label="Shadow"
                     value="3"/>
                 </colorPalette>

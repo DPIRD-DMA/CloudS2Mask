@@ -13,8 +13,8 @@ def create_gradient_mask(scene_settings: Settings) -> np.ndarray:
 
     Args:
         scene_settings (Settings): An instance of Settings class containing:
-            patch_size: The size of the image in pixels (assumes a square image).
-            patch_overlap_px: The width of the gradient area.
+            patch_size: The size of the image in pixels (assumes a square
+            image). patch_overlap_px: The width of the gradient area.
 
     Returns:
         np.ndarray: An array representing the gradient mask.
@@ -47,6 +47,29 @@ def create_gradient_mask(scene_settings: Settings) -> np.ndarray:
     return combined_gradient
 
 
+def export_geotiff(
+    export_array: np.ndarray,
+    scene_settings: Settings,
+    vrt_meta: dict,
+    nodata_mask: np.ndarray,
+):
+    export_meta = {
+        "count": export_array.shape[0],
+        "dtype": "uint8",
+        "nodata": None,
+        "driver": "GTiff",
+        "compress": scene_settings.output_compression,
+        "num_threads": "all_cpus",
+    }
+    vrt_meta.update(export_meta)
+
+    scene_settings.scene_progress_pbar.desc = "Exporting mask"
+
+    with rio.open(scene_settings.cloud_mask_path, "w", **vrt_meta) as dst:
+        dst.write(export_array * nodata_mask)
+    scene_settings.scene_progress_pbar.update(1)
+
+
 def merge_overlapped_preds(
     preds_with_meta: List, scene_settings: Settings, nodata_mask: np.ndarray
 ) -> Path:
@@ -75,8 +98,8 @@ def merge_overlapped_preds(
     """
     scene_settings.scene_progress_pbar.desc = "Joining predictions"
     gradient_mask = create_gradient_mask(scene_settings)
-    vrt_src = rio.open(scene_settings.vrt_path)
-    vrt_meta = vrt_src.meta
+    with rio.open(scene_settings.vrt_path) as vrt_src:
+        vrt_meta = vrt_src.meta
     output_height = vrt_meta["height"]
     output_width = vrt_meta["width"]
     try:
@@ -88,7 +111,10 @@ def merge_overlapped_preds(
         )
 
     merged_array = np.zeros([class_count, output_width, output_height], dtype="uint16")
-    grad_tracker = np.zeros([output_width, output_height], dtype="float32")
+    if scene_settings.export_confidence:
+        grad_tracker = np.zeros([output_width, output_height], dtype="float32")
+    else:
+        grad_tracker = None
 
     pbar_inc = 32 / len(preds_with_meta)
 
@@ -101,40 +127,29 @@ def merge_overlapped_preds(
             pred_with_meta["left"] : pred_with_meta["right"],
         ] += pred_grad
 
-        grad_tracker[
-            pred_with_meta["top"] : pred_with_meta["bottom"],
-            pred_with_meta["left"] : pred_with_meta["right"],
-        ] += gradient_mask
+        if grad_tracker is not None:
+            grad_tracker[
+                pred_with_meta["top"] : pred_with_meta["bottom"],
+                pred_with_meta["left"] : pred_with_meta["right"],
+            ] += gradient_mask
 
         scene_settings.scene_progress_pbar.update(pbar_inc)
 
-    eps = 1e-8
-    merged_array = np.where(
-        np.logical_and(grad_tracker > 0, merged_array > 0),
-        merged_array / (grad_tracker + eps),
-        0,
-    )
+    if grad_tracker is not None:
+        eps = 1e-8
+        merged_array = np.where(
+            np.logical_and(grad_tracker > 0, merged_array > 0),
+            merged_array / (grad_tracker + eps),
+            0,
+        )
 
-    merged_array = np.clip(merged_array, 0, 255).astype("uint8")
+        merged_array = np.clip(merged_array, 0, 255).astype("uint8")
 
     export_array = np.argmax(merged_array, 0, keepdims=True)
 
     if scene_settings.export_confidence:
         export_array = np.vstack([export_array, merged_array])
 
-    export_meta = {
-        "count": export_array.shape[0],
-        "dtype": "uint8",
-        "nodata": None,
-        "driver": "GTiff",
-        "compress": scene_settings.output_compression,
-        "num_threads": "all_cpus",
-    }
-    vrt_meta.update(export_meta)
+    export_geotiff(export_array, scene_settings, vrt_meta, nodata_mask)
 
-    scene_settings.scene_progress_pbar.desc = "Exporting mask"
-
-    with rio.open(scene_settings.cloud_mask_path, "w", **vrt_meta) as dst:
-        dst.write(export_array * nodata_mask)
-    scene_settings.scene_progress_pbar.update(1)
     return scene_settings.cloud_mask_path

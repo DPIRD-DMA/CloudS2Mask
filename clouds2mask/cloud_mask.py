@@ -1,14 +1,15 @@
 import queue
 import threading
-from concurrent import futures
 from threading import Thread
 from typing import List
+import time
 
 import numpy as np
 import torch
 from tqdm.auto import tqdm
 
 from .model_settings import Settings
+from .model_helpers import warmup_models
 from .inference import run_inference
 from .make_qml_files import (
     create_cloud_mask_classification_qml,
@@ -22,24 +23,24 @@ def export_overlapping_predictions(
     predictions_with_metadata: List[dict],
     scene_settings: Settings,
     batch_progress_bar: tqdm,
-    nodata_mask_future: futures.Future,
+    mask: np.ndarray,
 ) -> None:
     """
-    Exports overlapping predictions, performs cleanup operations, and creates
-    QML files if required.
+    Processes predictions to handle overlapping areas, performs cleanup, and
+    generates QML files based on settings.
 
     Args:
-        predictions_with_metadata (List[dict]): List of predictions with
-        corresponding metadata. scene_settings (Settings): Configuration
-        settings for the current scene. batch_progress_bar (tqdm): Progress bar
-        for batch processing. nodata_mask (np.ndarray): Nodata mask used in the
-        processing.
+        predictions_with_metadata (List[dict]): Predictions and their metadata.
+        scene_settings (Settings): Configuration for the scene, including paths
+        and flags for QML file creation. batch_progress_bar (tqdm): Progress bar
+        for tracking batch processing. mask (np.ndarray): Mask for identifying
+        areas with no data.
     """
-    # get the nodata mask which should be done by now
-    nodata_mask = nodata_mask_future.result()
 
-    merge_overlapped_preds(predictions_with_metadata, scene_settings, nodata_mask)
+    merge_overlapped_preds(predictions_with_metadata, scene_settings, mask)
+
     scene_settings.temp_dir.cleanup()
+
     if scene_settings.make_qml_files:
         if scene_settings.export_confidence:
             create_cloud_mask_confidence_qml(scene_settings.cloud_mask_path)
@@ -60,21 +61,22 @@ def infer_and_save(
     patch_metadata: List[dict],
     scene_settings_local: Settings,
     batch_progress_bar: tqdm,
-    nodata_mask_future: futures.Future,
+    mask: np.ndarray,
 ) -> Thread:
     """
-    Runs inference on patches, saves the results, and returns a thread of the
-    save operation.
+    Performs inference on image patches, saves the results, and initiates a
+    separate thread for the save operation.
 
     Args:
-        patch_batches (List[torch.Tensor]): List of input patches for inference.
-        meta_batches (List[List[dict]]): Metadata associated with each patch.
-        scene_settings_local (Settings): Scene-specific settings.
-        batch_progress_bar (tqdm): Progress bar for batch processing.
-        nodata_mask (np.ndarray): Nodata mask used in the processing.
+        patch_arrays (List[np.ndarray]): List of numpy arrays representing image
+        patches for inference. patch_metadata (List[dict]): Metadata associated
+        with each patch. scene_settings_local (Settings): Configuration settings
+        specific to the current scene. batch_progress_bar (tqdm): Progress bar
+        for monitoring batch processing. mask (np.ndarray): Mask used to
+        identify areas with no data in the image processing.
 
     Returns:
-        Thread: A thread object representing the save operation.
+        Thread: A thread object that handles the save operation.
     """
     predictions_with_metadata = run_inference(
         patch_arrays, patch_metadata, scene_settings_local
@@ -85,10 +87,11 @@ def infer_and_save(
             predictions_with_metadata,
             scene_settings_local,
             batch_progress_bar,
-            nodata_mask_future,
+            mask,
         ],
     )
     save_thread.start()
+
     return save_thread
 
 
@@ -111,58 +114,72 @@ def create_progress_bar(scene_settings: Settings) -> tqdm:
 
 def inference_worker(inference_queue, export_queue):
     """
-    Processes tasks in the inference queue, runs inference, and pushes results
-    to the export queue.
+    Continuously processes tasks from the inference queue. It performs inference
+    on each task and then places the results in the export queue.
 
     Args:
-        inference_queue (queue.Queue): Queue containing tasks for inference.
-        export_queue (queue.Queue): Queue for storing inference results.
+        inference_queue (queue.Queue): A queue containing tasks (data and
+        settings) for inference. export_queue (queue.Queue): A queue where the
+        results of the inference are stored for further processing.
     """
 
     while True:
         task = inference_queue.get()
+
         if task is None:
             break
         result = infer_and_save(*task)
         export_queue.put(result)
+        inference_queue.task_done()
 
 
-def save_worker(export_queue, save_threads):
+def save_worker(export_queue):
     """
-    Processes results in the export queue, joins and appends them to a list of
-    save threads.
+    Continuously processes results from the export queue by joining each save
+    thread. This ensures that each data save operation is completed before
+    proceeding to the next.
 
     Args:
-        export_queue (queue.Queue): Queue containing results from the inference
-        worker. save_threads (List[threading.Thread]): List where completed save
-        threads are appended.
+        export_queue (queue.Queue): Queue containing save thread objects from
+        the inference worker.
     """
     while True:
-        result = export_queue.get()
-        if result is None:
+        save_thread = export_queue.get()
+
+        if save_thread is None:
             break
-        save_thread = result
-        save_threads.append(save_thread)
+
         save_thread.join()
+        export_queue.task_done()
 
 
 def batch_process_scenes(scene_settings_batch):
     """
-    Processes a batch of scenes in a multi-threaded manner, performing inference
-    and saving results.
+    Processes a batch of scenes for cloud mask generation in a multi-threaded
+    manner. It involves warming up models, generating patches, performing
+    inference, and saving results.
 
     Args:
-        scene_settings_batch (List[Settings]): A list of settings for each scene
-        in the batch.
+        scene_settings_batch (List[Settings]): A list of settings objects, each
+        configuring the processing for a scene.
 
     Returns:
-        List[Path]: A list of Paths to the cloud mask files for each scene in
-        the batch.
+        List[Path]: A list of file paths, each corresponding to the cloud mask
+        file generated for a scene in the batch.
     """
-    inference_queue = queue.Queue(maxsize=2)
-    export_queue = queue.Queue(maxsize=3)
 
-    save_threads = []
+    warmup_thread = Thread(
+        target=warmup_models,
+        args=(scene_settings_batch[0],),
+    )
+    warmup_thread.start()
+
+    if scene_settings_batch[0].processing_res == 10:
+        inference_queue = queue.Queue(maxsize=1)
+    else:
+        inference_queue = queue.Queue(maxsize=2)
+    export_queue = queue.Queue(maxsize=2)
+
     cloud_mask_paths = []
 
     batch_progress_bar = (
@@ -181,37 +198,41 @@ def batch_process_scenes(scene_settings_batch):
     )
     inference_thread.start()
 
-    save_thread = threading.Thread(
-        target=save_worker, args=(export_queue, save_threads)
-    )
+    save_thread = threading.Thread(target=save_worker, args=([export_queue]))
     save_thread.start()
 
-    for scene_settings in scene_settings_batch:
+    for i, scene_settings in enumerate(scene_settings_batch):
+        # hold up the queue if it's full to avoid excessive memory usage
+        while inference_queue.full():
+            time.sleep(0.1)
         scene_settings.scene_progress_pbar = create_progress_bar(scene_settings)
         scene_settings.mask_output_dir.mkdir(exist_ok=True, parents=True)
-        patch_arrays, patch_metadata, nodata_mask_future = generate_patches(
-            scene_settings
-        )
+        patch_arrays, patch_metadata, mask = generate_patches(scene_settings)
 
         task = (
             patch_arrays,
             patch_metadata,
             scene_settings,
             batch_progress_bar,
-            nodata_mask_future,
+            mask,
         )
+
+        if warmup_thread.is_alive():
+            warmup_thread.join()
+
         inference_queue.put(task)
 
         cloud_mask_paths.append(scene_settings.cloud_mask_path)
-
+    # wait for inference to finish
     inference_queue.put(None)
-    export_queue.put(None)
-
-    # Join the threads to ensure all tasks have completed before continuing
     inference_thread.join()
-    save_thread.join()
+
     # if cuda is used, empty the cache
     if scene_settings_batch[0].pytorch_device.type == "cuda":
         torch.cuda.empty_cache()
+
+    # wait for saving to finish
+    export_queue.put(None)
+    save_thread.join()
 
     return cloud_mask_paths

@@ -3,7 +3,10 @@ from functools import partial
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from threading import Thread
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
+from concurrent.futures import ThreadPoolExecutor
+import multiprocessing
+
 
 import numpy as np
 import rasterio as rio
@@ -16,31 +19,18 @@ from .model_settings import Settings
 
 def create_patch_metadata(scene_settings: Settings) -> List[Dict[str, int]]:
     """
-    Creates metadata for each patch of the scene based on the provided settings.
+    Creates patch metadata for an image based on scene settings.
 
-    This function processes an image raster and creates a list of dictionaries
-    representing the metadata for each image patch. It iterates through the image
-    with a sliding window approach, with each window representing a patch.
-    Each dictionary contains the top, bottom, left, and right pixel indices that
-    define the patch within the original image.
-
-    Note that every second row is offset to the left by half the patch size. If
-    the offset results in the omission of a patch on the right edge, an extra
-    patch is added.
+    Each patch is defined by pixel indices ('left', 'top', 'right', 'bottom').
+    Alternating rows are offset for complete coverage, with additional patches
+    added as needed.
 
     Args:
-        scene_settings (Settings): The settings of the scene which includes the
-            path to the input image, the desired patch size, and the number of
-            overlapping pixels between adjacent patches.
+        scene_settings (Settings): Settings for patch size, overlap, and image
+        scale.
 
     Returns:
-        List[Dict[str, int]]: A list of dictionaries, each containing metadata
-            for a patch. The metadata includes 'left', 'top', 'right', and 'bottom'
-            keys, referring to the corresponding pixel indices in the image.
-
-    Raises:
-        FileNotFoundError: If the provided image file path in the scene settings
-            does not exist.
+        List[Dict[str, int]]: List of metadata for each patch.
     """
     full_size = (10980, 10980)
 
@@ -82,20 +72,18 @@ def create_patch_metadata(scene_settings: Settings) -> List[Dict[str, int]]:
 
 def get_files_from_safe(scene_settings: Settings) -> List[Path]:
     """
-    Retrieves the file paths of the required bands from the directory specified
-    in the scene settings. This function works with Sentinel-2 L1C data.
+    Extracts file paths for required bands from a Sentinel-2 L1C data directory.
 
     Args:
-        scene_settings (Settings): The settings of the scene from which files
-        are to be retrieved. This includes the directory path and the processing
-        level of the images.
+        scene_settings (Settings): Contains the directory path and processing
+        level for the scene.
 
     Returns:
-        List[Path]: A list of paths to the raster files for the required bands.
+        List[Path]: Paths to the raster files of required bands.
 
     Note:
-        This function raises an exception if the required band file is not found
-        in the directory.
+        An exception is raised if any required band file is not found in the
+        directory.
     """
 
     bands_to_patch_paths = []
@@ -110,44 +98,51 @@ def get_files_from_safe(scene_settings: Settings) -> List[Path]:
 
 
 def open_and_resize(
-    open_data_list: tuple, scene_progress_pbar: tqdm, pbar_inc: float
-) -> np.ndarray:
+    open_data_list: tuple,
+    scene_progress_pbar: tqdm,
+    pbar_inc: float,
+    resized_arrays: np.ndarray,
+) -> None:
     """
-    Opens a raster file, reads it into a numpy array and resizes it to the
-    required size if the original shape is not (10980, 10980). Updates a
-    progress bar as it reads and resizes.
+    Opens a raster file, reads it as a numpy array, and resizes it to a specific
+    shape. It also updates a progress bar during the operation.
 
     Args:
-        open_data_list (tuple): A tuple containing the path to the input raster
-        file and the scale factor to resize the array.
-
-        scene_progress_pbar (tqdm): The tqdm progress bar object that tracks the
-        progress of the resizing operation.
-
-        pbar_inc (float): The amount to increment the progress bar after
-        resizing each array.
-
-    Returns:
-        np.ndarray: The resized array read from the raster file.
+        open_data_list (tuple): Contains the path to the raster file and the
+        numpy output index. scene_progress_pbar (tqdm): Progress bar to monitor
+        the resizing process. pbar_inc (float): Increment value for the progress
+        bar after each resize operation. resized_arrays (np.ndarray):
+        Preallocated array for storing resized data.
     """
 
-    input_path, scale_factor = open_data_list
-    full_size = (10980, 10980)
+    input_path, index = open_data_list
+    required_size = resized_arrays.shape[1:3]
 
-    required_size = tuple([int(scale_factor * x) for x in full_size])
+    with rio.open(input_path) as src:
+        resized_arrays[index] = src.read(
+            1, out_shape=(required_size), resampling=Resampling.nearest
+        )
 
-    band_array = rio.open(input_path).read(
-        1, out_shape=(required_size), resampling=Resampling.nearest
-    )
     scene_progress_pbar.update(pbar_inc)
-    return band_array
 
 
 def shift_patch_inwards(
     patch: np.ndarray, resized_arrays: np.ndarray, patch_meta: Dict[str, int]
 ) -> Tuple[np.ndarray, Dict[str, int]]:
-    """Shifts the given patch inwards if it contains rows or columns of zeros."""
+    """
+    Adjusts the given patch to exclude rows or columns of zeros by shifting its
+    edges inward.
 
+    Args:
+        patch (np.ndarray): The initial patch array to be adjusted.
+        resized_arrays (np.ndarray): The complete array from which the patch is
+        derived. patch_meta (Dict[str, int]): Metadata dict for the patch,
+        including 'top', 'bottom', 'left', and 'right' indices.
+
+    Returns:
+        Tuple[np.ndarray, Dict[str, int]]: The adjusted patch array and its
+        updated metadata.
+    """
     max_bottom, max_right = resized_arrays.shape[1:3]
 
     # Both top and bottom sides are not zero-filled
@@ -189,76 +184,104 @@ def shift_patch_inwards(
     return patch, patch_meta
 
 
+def process_patch(
+    resized_arrays: np.ndarray, patch_meta: Dict[str, int]
+) -> Tuple[Optional[np.ndarray], Optional[Dict[str, int]]]:
+    """
+    Extracts and processes a patch from a resized image array using provided
+    metadata.
+
+    Args:
+        resized_arrays (np.ndarray): Array containing resized image data.
+        patch_meta (Dict[str, int]): Metadata dict with 'top', 'bottom', 'left',
+        and 'right' indices for the patch.
+
+    Returns:
+        Tuple[Optional[np.ndarray], Optional[Dict[str, int]]]: The processed
+        patch and its metadata, or (None, None) if the patch is invalid or
+        unnecessary.
+    """
+    patch = resized_arrays[
+        :,
+        patch_meta["top"] : patch_meta["bottom"],
+        patch_meta["left"] : patch_meta["right"],
+    ]
+
+    if patch.sum() != 0:
+        if patch.min() == 0:
+            patch, patch_meta = shift_patch_inwards(patch, resized_arrays, patch_meta)
+
+        if patch_meta is not None:
+            return patch, patch_meta
+
+    return None, None
+
+
 def make_patches(
     resized_arrays: np.ndarray, patch_meta_list: List[Dict[str, int]]
 ) -> Tuple[List[np.ndarray], List[Dict[str, int]]]:
-    """Generates patches from the given resized array based on the metadata
-    list.
+    """
+    Creates image patches from a resized array using provided metadata,
+    employing a thread pool for efficiency.
 
     Args:
-        resized_arrays (np.ndarray): The array of resized patches.
-        patch_meta_list (List[Dict[str, int]]): List of dictionaries with
-        metadata about each patch.
+        resized_arrays (np.ndarray): The array containing resized image data.
+        patch_meta_list (List[Dict[str, int]]): Metadata for each patch,
+        including position indices.
 
     Returns:
-        Tuple[List[np.ndarray], List[Dict[str, int]]]: List of generated patches
-        and the corresponding
-            list of metadata dictionaries.
+        Tuple[List[np.ndarray], List[Dict[str, int]]]: A list of processed patch
+        arrays and their corresponding metadata.
     """
     patch_arrays = []
     patch_meta_list_subset = []
-    for patch_meta in patch_meta_list:
-        patch = resized_arrays[
-            :,
-            patch_meta["top"] : patch_meta["bottom"],
-            patch_meta["left"] : patch_meta["right"],
-        ]
+    patch_generator_threads = multiprocessing.cpu_count() * 2
 
-        # only process if patch contains some valid data
-        if patch.sum() != 0:
-            # try to shift patch in if it contains zeros
-            if patch.min() == 0:
-                patch, patch_meta = shift_patch_inwards(
-                    patch, resized_arrays, patch_meta
-                )
-            # if we have shifted a patch on top of another, skip it
-            if patch_meta not in patch_meta_list_subset:
-                # convert to fp32 now so we dont need to do it at prediction time
-                patch_arrays.append(patch.astype(np.float32))
-                patch_meta_list_subset.append(patch_meta)
+    with ThreadPoolExecutor(max_workers=patch_generator_threads) as executor:
+        results = executor.map(
+            lambda p: process_patch(resized_arrays, p), patch_meta_list
+        )
+    for patch, meta in results:
+        if patch is not None and meta not in patch_meta_list_subset:
+            patch_arrays.append(patch)
+            patch_meta_list_subset.append(meta)
 
-    return (patch_arrays, patch_meta_list_subset)
+    return patch_arrays, patch_meta_list_subset
 
 
 def scene_to_no_data_mask(resized_arrays: np.ndarray) -> np.ndarray:
     """
-    Generates a no data mask for the given resized array. The mask is a boolean array
+    Creates a no-data mask from a resized image array. The mask is a boolean
+    array indicating areas with no data.
+
+    Args:
+        resized_arrays (np.ndarray): Array of resized image data.
+
+    Returns:
+        np.ndarray: A boolean array representing the no-data mask.
     """
-    non_zero_counts = np.count_nonzero(resized_arrays, axis=0)
-    # if there are more than 2 non-zero values in a pixel, it is not a nodata pixel
-    nodata_mask = non_zero_counts >= 2
+    nodata_mask = np.count_nonzero(resized_arrays, axis=0) >= 2
+
     return nodata_mask
 
 
 def generate_patches(
     scene_settings: Settings,
-) -> Tuple[List[np.ndarray], List[Dict], futures.Future]:
+) -> Tuple[List[np.ndarray], List[Dict], np.ndarray]:
     """
-    Generates patches from a scene, given the scene settings. The patches are
-    created from the required bands in the SAFE directory of the scene. The
-    patches are saved in the path specified by the VRT file. The number of cores
-    used for tiling can be specified. An overlap between patches can also be
-    specified.
+    Generates and processes patches from a scene based on specified settings. It
+    involves reading required bands, creating virtual rasters, and generating
+    patch metadata and nodata masks.
 
     Args:
-        scene_settings (Settings): The settings of the scene from which patches
-        are to be generated. It includes details such as the directory path for
-        input images, VRT file path, number of cores for tiling, pixel overlap
-        between patches, and required bands for patch generation.
+        scene_settings (Settings): Configuration for the scene, including input
+        image paths, VRT file path, tiling parameters, patch overlap, and
+        required bands.
 
     Returns:
-        List: A list containing arrays of patches and corresponding patch
-        metadata.
+        Tuple[List[np.ndarray], List[Dict], np.ndarray]: A tuple containing a
+        list of patch arrays, a list of patch metadata dictionaries, and a
+        nodata mask for the scene.
     """
     scene_settings.scene_progress_pbar.disable = False
     scene_settings.scene_progress_pbar.desc = "Making patches"
@@ -273,10 +296,15 @@ def generate_patches(
 
     # Load the entire dataset and its metadata
     open_data_list = []
-    for band in bands_to_patch_paths:
-        open_data_list.append((band, scene_settings.scale_factor))
+    for index, band in enumerate(bands_to_patch_paths):
+        open_data_list.append((band, index))
 
     pbar_inc = 33 / len(scene_settings.required_bands)
+
+    size = int(10980 * scene_settings.scale_factor)
+
+    resized_arrays = np.empty([13, size, size], dtype="uint16")
+
     with ThreadPool(scene_settings.processing_threads) as tp:
         # Create a partial function with fixed pbar argument
 
@@ -284,11 +312,10 @@ def generate_patches(
             open_and_resize,
             scene_progress_pbar=scene_settings.scene_progress_pbar,
             pbar_inc=pbar_inc,
+            resized_arrays=resized_arrays,
         )
 
-        resized_arrays = list(tp.imap(open_and_resize_with_pbar, open_data_list))
-
-    resized_arrays = np.array(resized_arrays)
+        list(tp.imap(open_and_resize_with_pbar, open_data_list))
 
     # build nodata mask in a separate thread to avoid blocking
     executor = futures.ThreadPoolExecutor(max_workers=1)
@@ -296,9 +323,10 @@ def generate_patches(
 
     # cut patches out of input data array
     patch_arrays, patch_metadata = make_patches(resized_arrays, patch_meta_list)
-    # convert to numpy array
 
     # make sure the vrt is built before returning
     vrt_thread.join()
+    mask = nodata_mask_future.result()
+    executor.shutdown()
 
-    return patch_arrays, patch_metadata, nodata_mask_future
+    return patch_arrays, patch_metadata, mask

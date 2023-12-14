@@ -5,6 +5,7 @@ from typing import List, Tuple, Union
 import torch
 from torch import Tensor, device
 from tqdm.auto import tqdm
+import warnings
 
 from .download_model_weights import download_model_weights
 from .model_helpers import (
@@ -138,9 +139,9 @@ def create_settings(
     export_confidence: bool = False,
     quiet: bool = False,
     model_ensembling: bool = False,
-    patch_size: int = 512,
+    patch_size: int = 500,
     fp16_mode: Union[bool, None] = None,
-    patch_overlap_px: int = 34,
+    patch_overlap_px: int = 128,
     optimise_scene_order: bool = True,
 ) -> List[Settings]:
     """
@@ -193,20 +194,26 @@ def create_settings(
     List[Settings]
         List of settings objects for each directory in sent_safe_dirs.
     """
+    if processing_res not in [10, 20]:
+        raise Exception("processing_res must be 10 or 20")
+
     if len(sent_safe_dirs) == 0:
         raise Exception("No .SAFE directories provided")
 
     if tta_max_depth < 0 or tta_max_depth > 7:
         raise Exception("tta_max_depth must be between 0 and 7")
 
-    if patch_overlap_px > patch_size:
+    if patch_overlap_px >= patch_size:
         raise Exception("patch_overlap_px must be less than patch_size")
 
     if patch_overlap_px < 0:
         raise Exception("patch_overlap_px must be greater than or equal to 0")
 
-    if patch_size < 128:
-        raise Exception("patch_size must be greater than or equal to 128")
+    if patch_size < 256:
+        warnings.warn(
+            f"{patch_size} is a very small patch size, this may cause accuracy issues"
+        )
+
     download_model_weights()
     # if device has been set to a string make it a pytorch device
     pytorch_device = torch.device(pytorch_device)
@@ -226,6 +233,7 @@ def create_settings(
         fp16_mode = fp16_available(
             pytorch_device=pytorch_device,
             models=models,
+            patch_size=patch_size,
         )
     # if fp16_mode is True the convert the models to half precision
     for index, model in enumerate(models):
