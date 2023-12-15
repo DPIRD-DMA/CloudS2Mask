@@ -17,9 +17,8 @@ def apply_augmentation(
     Applies specified image augmentations to the base patch tensors.
 
     Args:
-        augmentations (Tuple): A tuple indicating the types of augmentations to
-        apply. base_patch_tensors (torch.Tensor): The base image tensors to
-        which augmentations are applied.
+        augmentations (Tuple): A tuple indicating the types of augmentations to apply.
+        base_patch_tensors (torch.Tensor): The base image tensors to which augmentations are applied.
 
     Returns:
         torch.Tensor: The augmented image tensors.
@@ -43,8 +42,8 @@ def undo_augmentation(
     Reverses the applied image augmentations.
 
     Args:
-        augmentations (Tuple): A tuple indicating the types of augmentations to
-        reverse. predictions (torch.Tensor): The augmented image tensors.
+        augmentations (Tuple): A tuple indicating the types of augmentations to reverse.
+        predictions (torch.Tensor): The augmented image tensors.
 
     Returns:
         torch.Tensor: The image tensors after reversing the augmentations.
@@ -78,8 +77,8 @@ def create_and_queue_batches(
 
     Args:
         arrays_batches (List[List[np.ndarray]]): List of numpy array batches.
-        scene_settings (Settings): Scene settings. batch_queue (queue.Queue): A
-        queue to store the tensor batches.
+        scene_settings (Settings): Scene settings.
+        batch_queue (queue.Queue): A queue to store the tensor batches.
     """
     for patch_array_batch in arrays_batches:
         patch_tensor_batch = patch_list_to_tensor(patch_array_batch, scene_settings)
@@ -99,11 +98,11 @@ def consumer_batches_with_inf(
     processes them.
 
     Args:
-        meta_batches (List): List of metadata batches. queue (queue.Queue): A
-        queue to get the tensor batches from. preds_with_meta (List): A list to
-        store the predictions and metadata. scene_settings (Union[Settings,
-        Inf_Only_Settings]): Scene settings. pbar_inc (float): Progress bar
-        increment value.
+        meta_batches (List): List of metadata batches.
+        queue (queue.Queue): A queue to get the tensor batches from.
+        preds_with_meta (List): A list to store the predictions and metadata. scene_settings (Union[Settings,
+        Inf_Only_Settings]): Scene settings.
+        pbar_inc (float): Progress bar increment value.
     """
     for patch_meta in meta_batches:
         # this will block until an item is available
@@ -127,9 +126,9 @@ def make_batches(
     Breaks the provided patch arrays and metadata into sublist batches.
 
     Args:
-        patch_arrays (List[np.ndarray]): List of patch arrays. patch_metadata
-        (List[dict]): List of metadata. scene_settings (Union[Settings,
-        Inf_Only_Settings]): Scene settings.
+        patch_arrays (List[np.ndarray]): List of patch arrays.
+        patch_metadata (List[dict]): List of metadata.
+        scene_settings (Union[Settings, Inf_Only_Settings]): Scene settings.
 
     Returns:
         Tuple[List[List[np.ndarray]], List[List[dict]]]: Sublist batches of
@@ -156,8 +155,8 @@ def patch_list_to_tensor(
     Converts a list of patch arrays to a tensor batch.
 
     Args:
-        patch_arrays (List[np.ndarray]): List of patch arrays. scene_settings
-        (Union[Settings, Inf_Only_Settings]): The settings for the scene.
+        patch_arrays (List[np.ndarray]): List of patch arrays.
+        scene_settings (Union[Settings, Inf_Only_Settings]): The settings for the scene.
 
     Returns:
         torch.Tensor: The tensor of patch arrays.
@@ -180,9 +179,8 @@ def get_preds(
     Generates predictions for the provided image tensors.
 
     Args:
-        patch_tensor_batch (torch.Tensor): The image tensors for which to
-        generate predictions. scene_settings (Union[Settings,
-        Inf_Only_Settings]): The settings for the scene.
+        patch_tensor_batch (torch.Tensor): The image tensors for which to generate predictions.
+        scene_settings (Union[Settings, Inf_Only_Settings]): The settings for the scene.
 
     Returns:
         np.ndarray: The generated predictions for the image tensors.
@@ -230,7 +228,6 @@ def get_preds(
                     break
 
         active_indices = update_active_indices(preds_mean, active_indices)
-
     preds_mean = torch.mul(preds_mean, 255)
 
     preds_np = preds_mean.cpu().numpy().astype("uint8")
@@ -248,10 +245,9 @@ def run_inference(
     with corresponding metadata.
 
     Args:
-        patch_arrays (List[np.ndarray]): List of image patch arrays to perform
-        inference on. patch_metadata (List[dict]): Metadata for each image
-        patch. scene_settings (Union[Settings, Inf_Only_Settings]): The settings
-        for the scene.
+        patch_arrays (List[np.ndarray]): List of image patch arrays to perform inference on.
+        patch_metadata (List[dict]): Metadata for each image patch.
+        scene_settings (Union[Settings, Inf_Only_Settings]): The settings for the scene.
 
     Returns:
         list: List of dictionaries, each containing the prediction and

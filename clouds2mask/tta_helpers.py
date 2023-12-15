@@ -82,9 +82,7 @@ def count_isolated_pixels(
     Args:
         predictions (torch.Tensor): The input predictions tensor.
         indices_to_keep (List[int]): Indices of the images to process.
-        neighbour_threshold (int, optional): The maximum number of neighbours
-        with the same class label to consider a pixel isolated. Defaults to 1.
-        neighbour
+        neighbour_threshold (int, optional): The maximum number of neighbours with the same class label to consider a pixel isolated. Defaults to 1 neighbour.
 
     Returns:
         List[int]: A list containing the count of isolated pixels for each image
@@ -137,8 +135,7 @@ def get_tta_options(tta_max_depth: int) -> List[Tuple[int]]:
     provided settings.
 
     Args:
-        scene_settings (Settings): A settings object containing the maximum
-        number of TTA options (tta_max_depth) to include in the output list.
+        scene_settings (Settings): A settings object containing the maximum number of TTA options (tta_max_depth) to include in the output list.
     """
 
     ordered_augs = [(0, 0), (1, 0), (2, 0), (3, 0), (0, 1), (1, 1), (2, 1), (3, 1)]

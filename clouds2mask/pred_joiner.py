@@ -13,8 +13,7 @@ def create_gradient_mask(scene_settings: Settings) -> np.ndarray:
 
     Args:
         scene_settings (Settings): An instance of Settings class containing:
-            patch_size: The size of the image in pixels (assumes a square
-            image). patch_overlap_px: The width of the gradient area.
+            patch_size: The size of the image in pixels (assumes a square image). patch_overlap_px: The width of the gradient area.
 
     Returns:
         np.ndarray: An array representing the gradient mask.
@@ -53,6 +52,20 @@ def export_geotiff(
     vrt_meta: dict,
     nodata_mask: np.ndarray,
 ):
+    """
+    Exports a GeoTIFF file using provided data and settings.
+
+    Parameters:
+    export_array (np.ndarray): The array of data to be exported.
+    scene_settings (Settings): Configuration settings for the export process.
+    vrt_meta (dict): Metadata for the virtual raster (VRT) of the GeoTIFF.
+    nodata_mask (np.ndarray): An array indicating no-data values.
+
+    Note:
+    The function modifies the `vrt_meta` dictionary in place with export metadata,
+    writes the data to a GeoTIFF file specified in `scene_settings.cloud_mask_path`,
+    and updates the progress bar in `scene_settings`.
+    """
     export_meta = {
         "count": export_array.shape[0],
         "dtype": "uint8",
@@ -74,28 +87,27 @@ def merge_overlapped_preds(
     preds_with_meta: List, scene_settings: Settings, nodata_mask: np.ndarray
 ) -> Path:
     """
-    Merges overlapping image tiles using a gradient mask. The function blends
-    prediction values of overlapping tiles using a gradient mask, giving more
-    weight to the center of the tiles and less weight to the borders. The merged
-    result is exported as a GeoTiff file.
+    Merges overlapped predictions from segmented parts of a scene into a single prediction array
+    and exports it as a GeoTIFF file.
 
-    Args:
-        preds_with_meta (List[dict]): A list of dictionaries containing metadata
-        and prediction values for each tile. Each dictionary should contain keys
-        for "top", "bottom", "left", "right" and "patch_pred". scene_settings
-        (Settings): An instance of the Settings class containing:
-            vrt_path: The path to the source Virtual Dataset (VRT) file.
-            patch_size: The size of the image tiles. patch_overlap_px: The
-            number of overlapping pixels between tiles. cloud_mask_path: The
-            path to the output GeoTiff file. export_confidence: A flag
-            indicating whether to export gradient confidence along with the main
-            output.
-        nodata_mask (np.ndarray): A numpy array used for masking the areas of no
-        data.
+    Parameters:
+    preds_with_meta (List): A list of dictionaries containing predictions and metadata for each patch.
+    scene_settings (Settings): Configuration settings for the merging and export processes.
+    nodata_mask (np.ndarray): An array indicating no-data values.
 
     Returns:
-        Path: The path to the generated GeoTiff file.
+    Path: Path to the exported GeoTIFF file.
+
+    Raises:
+    ValueError: If `preds_with_meta` is empty, which may indicate GPU memory exhaustion.
+
+    Notes:
+    - The function creates a gradient mask and merges predictions from each patch.
+    - If `scene_settings.export_confidence` is True, it also tracks gradients and normalizes the merged predictions.
+    - Updates the progress bar in `scene_settings` throughout the process.
+    - Calls `export_geotiff` function to export the final merged prediction array as a GeoTIFF file.
     """
+
     scene_settings.scene_progress_pbar.desc = "Joining predictions"
     gradient_mask = create_gradient_mask(scene_settings)
     with rio.open(scene_settings.vrt_path) as vrt_src:

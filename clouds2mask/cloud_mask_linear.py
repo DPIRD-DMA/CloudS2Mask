@@ -27,11 +27,10 @@ def export_overlapping_predictions(
     QML files if required.
 
     Args:
-        predictions_with_metadata (List[dict]): List of predictions with
-        corresponding metadata. scene_settings (Settings): Configuration
-        settings for the current scene. batch_progress_bar (tqdm): Progress bar
-        for batch processing. nodata_mask (np.ndarray): Nodata mask used in the
-        processing.
+        predictions_with_metadata (List[dict]): List of predictions with corresponding metadata.
+        scene_settings (Settings): Configuration settings for the current scene.
+        batch_progress_bar (tqdm): Progress bar for batch processing.
+        nodata_mask (np.ndarray): Nodata mask used in the processing.
     """
 
     merge_overlapped_preds(predictions_with_metadata, scene_settings, nodata_mask)
@@ -109,8 +108,7 @@ def batch_process_scenes_linear(scene_settings_batch):
     and saving results.
 
     Args:
-        scene_settings_batch (List[Settings]): A list of settings for each scene
-        in the batch.
+        scene_settings_batch (List[Settings]): A list of settings for each scene in the batch.
 
     Returns:
         List[Path]: A list of Paths to the cloud mask files for each scene in

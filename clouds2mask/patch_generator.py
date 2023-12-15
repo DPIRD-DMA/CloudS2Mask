@@ -26,8 +26,7 @@ def create_patch_metadata(scene_settings: Settings) -> List[Dict[str, int]]:
     added as needed.
 
     Args:
-        scene_settings (Settings): Settings for patch size, overlap, and image
-        scale.
+        scene_settings (Settings): Settings for patch size, overlap, and image scale.
 
     Returns:
         List[Dict[str, int]]: List of metadata for each patch.
@@ -75,8 +74,7 @@ def get_files_from_safe(scene_settings: Settings) -> List[Path]:
     Extracts file paths for required bands from a Sentinel-2 L1C data directory.
 
     Args:
-        scene_settings (Settings): Contains the directory path and processing
-        level for the scene.
+        scene_settings (Settings): Contains the directory path and processing level for the scene.
 
     Returns:
         List[Path]: Paths to the raster files of required bands.
@@ -108,11 +106,10 @@ def open_and_resize(
     shape. It also updates a progress bar during the operation.
 
     Args:
-        open_data_list (tuple): Contains the path to the raster file and the
-        numpy output index. scene_progress_pbar (tqdm): Progress bar to monitor
-        the resizing process. pbar_inc (float): Increment value for the progress
-        bar after each resize operation. resized_arrays (np.ndarray):
-        Preallocated array for storing resized data.
+        open_data_list (tuple): Contains the path to the raster file and the numpy output index.
+        scene_progress_pbar (tqdm): Progress bar to monitor the resizing process.
+        pbar_inc (float): Increment value for the progress bar after each resize operation.
+        resized_arrays (np.ndarray): Preallocated array for storing resized data.
     """
 
     input_path, index = open_data_list
@@ -130,14 +127,12 @@ def shift_patch_inwards(
     patch: np.ndarray, resized_arrays: np.ndarray, patch_meta: Dict[str, int]
 ) -> Tuple[np.ndarray, Dict[str, int]]:
     """
-    Adjusts the given patch to exclude rows or columns of zeros by shifting its
-    edges inward.
+    Adjusts the given patch to exclude rows or columns of zeros by shifting its edges inward.
 
     Args:
         patch (np.ndarray): The initial patch array to be adjusted.
-        resized_arrays (np.ndarray): The complete array from which the patch is
-        derived. patch_meta (Dict[str, int]): Metadata dict for the patch,
-        including 'top', 'bottom', 'left', and 'right' indices.
+        resized_arrays (np.ndarray): The complete array from which the patch is derived.
+        patch_meta (Dict[str, int]): Metadata dict for the patch, including 'top', 'bottom', 'left', and 'right' indices.
 
     Returns:
         Tuple[np.ndarray, Dict[str, int]]: The adjusted patch array and its
@@ -193,8 +188,7 @@ def process_patch(
 
     Args:
         resized_arrays (np.ndarray): Array containing resized image data.
-        patch_meta (Dict[str, int]): Metadata dict with 'top', 'bottom', 'left',
-        and 'right' indices for the patch.
+        patch_meta (Dict[str, int]): Metadata dict with 'top', 'bottom', 'left', and 'right' indices for the patch.
 
     Returns:
         Tuple[Optional[np.ndarray], Optional[Dict[str, int]]]: The processed
@@ -226,8 +220,7 @@ def make_patches(
 
     Args:
         resized_arrays (np.ndarray): The array containing resized image data.
-        patch_meta_list (List[Dict[str, int]]): Metadata for each patch,
-        including position indices.
+        patch_meta_list (List[Dict[str, int]]): Metadata for each patch, including position indices.
 
     Returns:
         Tuple[List[np.ndarray], List[Dict[str, int]]]: A list of processed patch
@@ -274,9 +267,7 @@ def generate_patches(
     patch metadata and nodata masks.
 
     Args:
-        scene_settings (Settings): Configuration for the scene, including input
-        image paths, VRT file path, tiling parameters, patch overlap, and
-        required bands.
+        scene_settings (Settings): Configuration for the scene, including input image paths, VRT file path, tiling parameters, patch overlap, and required bands.
 
     Returns:
         Tuple[List[np.ndarray], List[Dict], np.ndarray]: A tuple containing a

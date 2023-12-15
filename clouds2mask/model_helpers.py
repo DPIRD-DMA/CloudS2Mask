@@ -88,11 +88,8 @@ def find_models(
 
     Args:
         model_dir (Path): The directory where to search for model files.
-        processing_res (int): The processing resolution to use for filtering the
-        model files.
-        model_ensembling (bool, optional): If True, returns all the models that match
-        the processing resolution. If False, returns the first model that matches
-        the processing resolution. Defaults to False.
+        processing_res (int): The processing resolution to use for filtering the model files.
+        model_ensembling (bool, optional): If True, returns all the models that match the processing resolution. If False, returns the first model that matches the processing resolution. Defaults to False.
 
     Returns:
         List[Path]: A list containing the paths of the model files found.

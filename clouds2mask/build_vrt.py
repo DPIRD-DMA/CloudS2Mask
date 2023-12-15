@@ -99,9 +99,10 @@ def _calculate_spatial_extend(
     Calculates the spatial extent of the dataset.
 
     Args:
-        left_ (list): List of left bounds. bottom_ (list): List of bottom
-        bounds. right_ (list): List of right bounds. top_ (list): List of top
-        bounds. res (Tuple[float, float]): A tuple representing the resolution.
+        left_ (list): List of left bounds.
+        bottom_ (list): List of bottom
+        bounds. right_ (list): List of right bounds. top_ (list): List of top bounds.
+        res (Tuple[float, float]): A tuple representing the resolution.
 
     Returns:
         tuple: A tuple containing the affine transformation, total width, and
@@ -129,7 +130,8 @@ def build_vrt(
 
     Args:
         scene_settings Settings: Settings object with scene information.
-        (List[Path]): List of rasterio readable files. res (Tuple[float, float],
+        (List[Path]): List of rasterio readable files.
+        res (Tuple[float, float],
 
 
     Returns:
