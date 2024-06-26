@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="clouds2mask",
-    version="1.1.2",
+    version="1.1.3",
     description="""Python library for cloud and cloud shadow segmentation in Sentinel-2
     L1C imagery""",
     long_description=open("README.md", encoding="utf-8").read(),
@@ -14,7 +14,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "fastai>=2.7",
-        "timm>=0.9",
+        "timm>=0.9,<1.0.4",
         "tqdm>=4.0",
         "rasterio>=1.3",
         "gdown>=5.1.0",
