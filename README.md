@@ -1,5 +1,9 @@
 # Welcome to CloudS2Mask ☁️
 
+**Note, CloudS2Mask is being replaced by [OmniCloudMask](https://github.com/DPIRD-DMA/OmniCloudMask).**
+
+**OmniCloudMask has improved accuracy and imagery compatibility over CloudS2Mask, and should be a drop in replacement in most cases.**
+
 ![GitHub](https://img.shields.io/badge/License-MIT-green)
 ![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![Last Commit](https://img.shields.io/github/last-commit/DPIRD-DMA/CloudS2Mask)
@@ -18,7 +22,23 @@ CloudS2Mask is an open-source Python library that efficiently segments clouds an
 
 **Mac and Linux Users**: You can proceed with the installation commands below.
 
-To install using pip.
+To install within a fresh environment.
+```bash
+# Create and activate new conda environment using python 3.9 or above
+conda create -n clouds2mask python=3.9
+conda activate clouds2mask
+
+# If using windows install PyTorch using the command found here
+# https://pytorch.org/get-started/locally/
+
+# Install CloudS2Mask
+pip install clouds2mask
+```
+To install within an existing environment you can do one of the following.
+
+Make sure your using **Python 3.9 or above**.
+
+Install using pip.
 ```console
 pip install clouds2mask
 ```
