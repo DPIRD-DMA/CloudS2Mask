@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="clouds2mask",
-    version="1.1.3",
+    version="1.1.4",
     description="""Python library for cloud and cloud shadow segmentation in Sentinel-2
     L1C imagery""",
     long_description=open("README.md", encoding="utf-8").read(),
@@ -10,7 +10,7 @@ setup(
     author="Nick Wright",
     author_email="nicholas.wright@dpird.wa.gov.au",
     url="https://github.com/DPIRD-DMA/CloudS2Mask",
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     packages=find_packages(),
     install_requires=[
         "fastai>=2.7",
