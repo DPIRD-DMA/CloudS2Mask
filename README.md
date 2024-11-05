@@ -11,6 +11,8 @@
 ## 💡 About  
 CloudS2Mask is an open-source Python library that efficiently segments clouds and cloud shadows in Sentinel-2 imagery using state-of-the-art deep learning techniques.
 
+[Check out the paper](https://doi.org/10.1016/j.rse.2024.114122) for details and benchmarks.
+
 ## 🎯 Features  
 * High-precision cloud and cloud shadow segmentation for Sentinel-2 L1C imagery.
 * Rapid processing: Approximately 2.2 seconds per scene at 20m resolution (RTX 4090, AMD Ryzen 9 5950X).
@@ -133,3 +135,20 @@ This project is licensed under the MIT License - please refer to the LICENSE fil
 
 ## 📝 Contact  
 For support, bug reporting, or to contribute, feel free to reach out at nicholas.wright@dpird.wa.gov.au.
+
+## 📚 Citation
+If you use this work, please cite:
+
+```bibtex
+@article{WRIGHT2024114122,
+    title = {CloudS2Mask: A novel deep learning approach for improved cloud and cloud shadow masking in Sentinel-2 imagery},
+    author = {Nicholas Wright and John M.A. Duncan and J. Nik Callow and Sally E. Thompson and Richard J. George},
+    journal = {Remote Sensing of Environment},
+    volume = {306},
+    pages = {114122},
+    year = {2024},
+    issn = {0034-4257},
+    doi = {https://doi.org/10.1016/j.rse.2024.114122},
+    url = {https://www.sciencedirect.com/science/article/pii/S0034425724001330}
+}
+```
